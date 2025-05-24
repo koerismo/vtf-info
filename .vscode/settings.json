@@ -1,0 +1,23 @@
+{
+	"files.associations": {
+		"*.txt": "plaintext",
+		"*.C": "c",
+		"*.csv": "plaintext",
+		"*.json": "jsonc",
+		"*.data": "plaintext",
+		"LICENSE": "plaintext",
+		"*.css": "css",
+		"*.scss": "scss",
+		"memory": "cpp",
+		"type_traits": "cpp",
+		"utility": "cpp",
+		"limits": "cpp",
+		"new": "cpp",
+		"ratio": "cpp",
+		"string": "cpp",
+		"tuple": "cpp",
+		"typeinfo": "cpp",
+		"unordered_map": "cpp",
+		"vector": "cpp"
+	}
+}
