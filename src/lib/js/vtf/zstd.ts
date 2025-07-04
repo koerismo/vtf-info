@@ -7,7 +7,7 @@ setCompressionMethod(
 	compress,
 	async (data, method, _level) => {
 		if (method === VCompressionMethods.ZSTD)
-			return decompressZSTD(data)
+			return decompressZSTD(data).slice();
 		return og_decomp(data, method, _level);
 	}
 );

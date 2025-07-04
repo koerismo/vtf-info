@@ -15,8 +15,8 @@ importers:
         specifier: ^0.176.0
         version: 0.176.0
       vtf-js:
-        specifier: link:../vtf.js
-        version: link:../vtf.js
+        specifier: link:..\vtf-js
+        version: link:../vtf-js
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^3.0.8

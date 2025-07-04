@@ -1,13 +1,13 @@
 import { DataBuffer, VFileHeader } from 'vtf-js';
-import { VBaseResource, type VHeader } from 'vtf-js/resources';
+import { VBaseResource, VHeaderTags, type VHeader } from 'vtf-js/resources';
 import { KeyVRoot, KeyVSet, parse } from 'fast-vdf';
 
 export class VKeyValuesResource extends VBaseResource {
-	static tag = 'KVD';
+	static tag = 0x48_56_44;
 	kvs?: KeyVRoot<string>;
 
 	constructor(kvs?: KeyVRoot<string>) {
-		super('KVD', 0x0);
+		super(VKeyValuesResource.tag, 0x0);
 		this.kvs = kvs;
 	}
 

@@ -1,4 +1,6 @@
 import { VEncodedImageData, VFlags, VFormats, VImageData, type Vtf } from 'vtf-js';
+import { VHeaderTags, type HotspotRect, type VHotspotResource } from 'vtf-js/resources';
+
 import * as Three from 'three';
 import { remap } from './utils/math.ts';
 import { DEG2RAD } from 'three/src/math/MathUtils.js';
@@ -21,8 +23,10 @@ export class Viewport {
 	mode: ViewportModes = ViewportModes.None;
 	vtf?: Vtf;
 	animator: AnimRunner = new AnimRunner();
+	needsRender: boolean = true;
 
 	slicePlanes: Three.Mesh<Three.PlaneGeometry, Three.Material>[] = [];
+	hotspotObject: HotspotObject | undefined;
 
 	element: HTMLCanvasElement;
 	cameraOrbit: Three.Object3D;
@@ -82,10 +86,15 @@ export class Viewport {
 		if (this.rendering) return console.error('VIEWPORT HAS >1 RENDERING THREADS!!!! WTF!!!!!');
 		this.rendering ++;
 
-		this.animator.frame();
+		if (this.animator.frame()) this.needsRender ||= true;
+
 		// this.cameraOrbit.rotation.y = approach(this.cameraOrbit.rotation.y, 30*DEG2RAD, 0.02);
 		// this.cameraOrbit.rotation.x = approach(this.cameraOrbit.rotation.x, -20*DEG2RAD, 0.02);
-		this.renderer.render(this.scene, this.camera);
+	
+		if (this.needsRender) {
+			this.renderer.render(this.scene, this.camera);
+			this.needsRender = false;
+		}
 		
 		this.rendering --;
 		requestAnimationFrame(() => this.render());
@@ -101,6 +110,7 @@ export class Viewport {
 		this.camera.bottom = -camWidth;
 		this.camera.updateProjectionMatrix();
 		this.renderer.setSize(w * devicePixelRatio, h * devicePixelRatio, false);
+		this.needsRender = true;
 	}
 
 	makeSlicePlane(z: number, aspect: number, mat: Three.Material) {
@@ -162,6 +172,18 @@ export class Viewport {
 			], img.width, img.height, format));
 		}
 
+		if (img.format === VFormats.BC7) {
+			return setupTexture(new Three.CompressedTexture([
+				{ data: img.data, width: img.width, height: img.height }
+			], img.width, img.height, Three.RGBA_BPTC_Format ))
+		}
+
+		if (img.format === VFormats.BC6H) {
+			return setupTexture(new Three.CompressedTexture([
+				{ data: img.data, width: img.width, height: img.height }
+			], img.width, img.height, Three.RGB_BPTC_UNSIGNED_Format ))
+		}
+
 		let glFormat: Three.PixelFormat | undefined;
 		let glType!: Three.TextureDataType;
 
@@ -169,7 +191,7 @@ export class Viewport {
 
 		switch (img.format) {
 			case VFormats.RGBA8888: { glFormat = Three.RGBAFormat; glType = Three.UnsignedByteType; break }
-			case VFormats.RGB888: { glFormat = Three.RGBFormat; glType = Three.UnsignedByteType; break }
+			// case VFormats.RGB888: { glFormat = Three.RGBFormat; glType = Three.UnsignedByteType; break }
 			case VFormats.I8: { glFormat = Three.LuminanceFormat; glType = Three.UnsignedByteType; break }
 			case VFormats.IA88: { glFormat = Three.LuminanceAlphaFormat; glType = Three.UnsignedByteType; break }
 			case VFormats.RGBA16161616: { glFormat = Three.RGBAFormat; glType = Three.UnsignedShortType; break }
@@ -201,7 +223,7 @@ export class Viewport {
 		return;
 	}
 
-	makeSlices(slices: (VEncodedImageData | VImageData)[], aspect: number, flags: VFlags) {
+	setSceneSlices(slices: (VEncodedImageData | VImageData)[], aspect: number, flags: VFlags) {
 		if (this.slicePlanes.length) {
 			// Remove all old shit
 			this.scene.remove(...this.slicePlanes);
@@ -226,6 +248,23 @@ export class Viewport {
 		}
 
 		this.scene.add(...this.slicePlanes);
+		return startZ;
+	}
+
+	setSceneHotspots(width: number, height: number, z: number, res?: VHotspotResource) {
+		if (this.hotspotObject) this.scene.remove(this.hotspotObject);
+		if (!res) return;
+
+		// const hs = new HotspotObject([
+		// 	{ min_x: 0, min_y: 0, max_x: 128, max_y: 128, flags: 0 },
+		// 	{ min_x: 0, min_y: 128, max_x: 128, max_y: 256, flags: 0 },
+		// 	{ min_x: 128, min_y: 128, max_x: 256, max_y: 256, flags: 0 },
+		// ], 256, 256);
+
+		const hs = this.hotspotObject = new HotspotObject(res.rects, width, height);
+		hs.position.set(-0.5, 0.5, z + 0.05);
+		hs.rotation.set(0, Math.PI, Math.PI);
+		this.scene.add(hs);
 	}
 
 	getDefaultMode() {
@@ -249,6 +288,10 @@ export class Viewport {
 			// Rotate camera into place
 			this.animator.quint_out(this.cameraOrbit.rotation, 'x', 0, 0.5, -20*DEG2RAD, -20*DEG2RAD);
 			this.animator.quint_out(this.cameraOrbit.rotation, 'y', 0, 0.5,  40*DEG2RAD,  30*DEG2RAD);
+
+			if (this.hotspotObject) {
+				this.hotspotObject.opacity = 0.0;
+			}
 		}
 
 		else if (this.mode === ViewportModes.None && mode === ViewportModes.Single) {
@@ -258,6 +301,10 @@ export class Viewport {
 			}
 			this.animator.quint_out(this.cameraOrbit.rotation, 'x', 0, 0.4, 0, 0);
 			this.animator.quint_out(this.cameraOrbit.rotation, 'y', 0, 0.4, 0, 0);
+
+			if (this.hotspotObject) {
+				this.animator.quart_out(this.hotspotObject, 'opacity', 0.2, 1.5, 0.0, 1.0);
+			}
 		}
 
 		else if (this.mode === ViewportModes.ArrayFrames && mode === ViewportModes.Single) {
@@ -269,6 +316,10 @@ export class Viewport {
 			}
 			this.animator.quint_out(this.cameraOrbit.rotation, 'x', 0, 0.4, -20*DEG2RAD, 0);
 			this.animator.quint_out(this.cameraOrbit.rotation, 'y', 0, 0.4,  40*DEG2RAD, 0);
+
+			if (this.hotspotObject) {
+				this.animator.quart_out(this.hotspotObject, 'opacity', 0.2, 1.5, 0.0, 1.0);
+			}
 		}
 
 		else if (this.mode === ViewportModes.Single && mode === ViewportModes.ArrayFrames) {
@@ -280,6 +331,10 @@ export class Viewport {
 			}
 			this.animator.quint_out(this.cameraOrbit.rotation, 'x', 0, 0.4, 0, -20*DEG2RAD);
 			this.animator.quint_out(this.cameraOrbit.rotation, 'y', 0, 0.4, 0,  40*DEG2RAD);
+
+			if (this.hotspotObject) {
+				this.animator.quart_out(this.hotspotObject, 'opacity', 0.0, 0.5, 1.0, 0.0);
+			}
 		}
 
 		this.mode = mode;
@@ -295,17 +350,21 @@ export class Viewport {
 		for (let i=0; i<frameCount; i++) {
 			frames[i] = this.vtf.data.getImage(0, i, 0, 0, true);
 		}
-		
+
+		// Create scene slices
 		const size = this.vtf.data.getSize(0, 0, 0, 0);
 		const aspectRatio = size[0] / size[1];
-		this.makeSlices(frames, aspectRatio, this.vtf.flags);
+		const frontZ = this.setSceneSlices(frames, aspectRatio, this.vtf.flags);
+
+		// Create scene hotspots
+		const res_hotspots = <VHotspotResource|undefined>vtf.meta.find(x => x.tag === VHeaderTags.TAG_HOTSPOT);
+		this.setSceneHotspots(size[0], size[1], frontZ, res_hotspots);
 
 		this.mode = ViewportModes.None; // this sucks
 		if (this.slicePlanes.length > 1)
 			gViewportMode.set(ViewportModes.ArrayFrames)
 		else
 			gViewportMode.set(ViewportModes.Single)
-
 
 		// this.animator.quint_out(this.cameraOrbit.rotation, 'y', 0, 0.5, 40*DEG2RAD, 30*DEG2RAD);
 		// this.animator.quint_out(this.cameraOrbit.rotation, 'y', 2, 3, 30*DEG2RAD, 0);
@@ -322,5 +381,49 @@ export class Viewport {
 		this.mode = ViewportModes.None;
 		gViewportMode.set(ViewportModes.None);
 		this.vtf = undefined;
+	}
+}
+
+let ColorSetIndex = 0;
+const ColorSet = Object.values(Three.Color.NAMES);
+function nextColor() {
+	ColorSetIndex++;
+	if (ColorSetIndex >= ColorSet.length) ColorSetIndex = 0;
+	return ColorSet[ColorSetIndex-1];
+}
+
+export class HotspotObject extends Three.Object3D {
+	protected rects: HotspotRect[];
+	protected mat: Three.Material;
+
+	constructor(rects: HotspotRect[], imageWidth: number, imageHeight: number) {
+		super();
+		this.rects = rects;
+
+		const plane = new Three.PlaneGeometry(1, 1);
+		plane.translate(0.5, 0.5, 0);
+
+		const mat = this.mat = new Three.MeshBasicMaterial({ color: 0xffffff, wireframe: true, blending: Three.NormalBlending, transparent: true, opacity: 0 });
+		const meshes = new Three.InstancedMesh(plane, mat, rects.length);
+
+		for (let i=0; i<rects.length; i++) {
+			const rect = rects[i];
+			const matrix = new Three.Matrix4();
+			matrix.makeScale((rect.max_x - rect.min_x) / imageWidth, (rect.max_y - rect.min_y) / imageHeight, 1);
+			matrix.setPosition(rect.min_x / imageWidth, rect.min_y / imageHeight, 0);
+			meshes.setMatrixAt(i, matrix);
+			meshes.setColorAt(i, new Three.Color(nextColor()));
+		}
+
+		this.add(meshes);
+	}
+
+	set opacity(v: number) {
+		this.mat.opacity = v;
+		this.mat.needsUpdate = true;
+	}
+	
+	get opacity() {
+		return this.mat.opacity;
 	}
 }

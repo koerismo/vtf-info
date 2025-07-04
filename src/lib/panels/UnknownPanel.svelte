@@ -1,7 +1,7 @@
 <script lang='ts'>
 	import Panel from '$lib/components/Panel.svelte';
 	import type { VBaseResource } from 'vtf-js/resources';
-	import { hex_tag, as_bytelength } from '$lib/js/utils/math.ts';
+	import { hex_tag, as_bytelength, str_tag } from '$lib/js/utils/math.ts';
 	import BitFlags from '$lib/components/BitFlags.svelte';
 	const { chunk }: { chunk: VBaseResource } = $props();
 
@@ -20,18 +20,14 @@
 
 <Panel title='vtf &rarr; unknown'>
 	<div class="pgrid">
-		<!-- <div class="u-chunk-header">
-			<code>{hex_tag(chunk.tag)}</code>
-			<code class="code-text">"{chunk.tag}"</code>
-		</div> -->
 		<div class="pgrid-row">
 			<span>tag</span>
-			<code><span>0x</span> {hex_tag(chunk.tag)} <span>"{chunk.tag}"</span></code>
+			<code><span>0x</span> {hex_tag(chunk.tag)} <span>"{str_tag(chunk.tag)}"</span></code>
 		</div>
 		<div class="pgrid-row">
 			<span>data</span>
 			{#if !(chunk.flags & 0x2)}
-				<span>{as_bytelength(chunk.data!.length)}</span>
+				<span>{as_bytelength(chunk.raw?.length ?? 0)}</span>
 			{:else}
 				<span>none</span>
 			{/if}
@@ -43,40 +39,27 @@
 
 <style lang="scss">
 	@use '$lib/style/theme.scss' as *;
-	
-	/* div.u-chunk-header {
-		display: flex;
-		justify-content: space-between;
+
+	// div#chunk-tag {
+	// 	display: flex;
+	// 	flex-direction: row;
+	// 	justify-content: space-between;
+	// 	grid-column: 1/3;
+	// 	align-items: end;
 		
-		background-color: #000;
-		border: 1px solid #555;
-		padding: 0.2rem;
-	}
+	// 	code {
+	// 		font-size: 1.4em;
+	// 		font-weight: 300;
+	// 		font-family: $font-header;
 
-	code.code-text {
-		color: #ffbf5e;
-	} */
-
-	div#chunk-tag {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		grid-column: 1/3;
-		align-items: end;
-		
-		code {
-			font-size: 1.4em;
-			font-weight: 300;
-			font-family: $font-header;
-
-			span {
-				color: $light-300;
-			}
-		}
+	// 		span {
+	// 			color: $light-300;
+	// 		}
+	// 	}
 	
-		span.value {
-			font-size: 0.8em;
-			color: $light-300;
-		}
-	}
+	// 	span.value {
+	// 		font-size: 0.8em;
+	// 		color: $light-300;
+	// 	}
+	// }
 </style>

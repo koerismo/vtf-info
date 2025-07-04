@@ -65,7 +65,7 @@
 		<div class='pgrid-row'>
 			<span>dimensions</span>
 			<span>
-				<span>{width}</span> &cross; <span>{height}</span> {#if sliceCount>1}&cross; <span>{sliceCount}</span>{/if}
+				<span>{width}</span> x <span>{height}</span> {#if sliceCount>1}&cross; <span>{sliceCount}</span>{/if}
 			</span>
 		</div>
 		<div class='pgrid-row'>

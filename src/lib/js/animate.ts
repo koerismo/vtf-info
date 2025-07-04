@@ -1,5 +1,9 @@
 const TIME_PADDING = 0.1;
 
+export function linear(x: number) {
+	return x;
+}
+
 export function quartic_in_out(x: number) {
 	if (x >= 1) return 1;
 	if (x <= 0) return 0;
@@ -37,6 +41,10 @@ export class AnimRunner {
 	running = false;
 	startTime = 0;
 	maxTime = 0;
+
+	linear(object: any, p: string, start: number, end: number, v1: number, v2: number) {
+		return this.key(object, p, start, end, v1, v2, linear);
+	}
 
 	quint_out(object: any, p: string, start: number, end: number, v1: number, v2: number) {
 		return this.key(object, p, start, end, v1, v2, quintic_out);
@@ -91,16 +99,20 @@ export class AnimRunner {
 		this.running = false;
 	}
 
-	frame() {
-		if (!this.running) return;
+	/** @returns Returns true if any updates were made, otherwise false. */
+	frame(): boolean {
+		if (!this.running) return false;
 		const time = (Date.now() - this.startTime) / 1000;
-		if (time > this.maxTime) { this.running = false; return; }
+		if (time > this.maxTime) { this.running = false; return false; }
+		let hit = false;
 		for (let i=0; i<this.tracks.length; i++) {
 			const track = this.tracks[i];
 			if (time < track.startTime || time > track.endTime) continue;
 			const trackTime = (time - track.startTime) / (track.endTime - track.startTime);
 			const trackValue = track.func(trackTime) * (track.endValue - track.startValue) + track.startValue;
 			track.object[track.property] = trackValue;
+			hit = true;
 		}
+		return hit;
 	}
 }

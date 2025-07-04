@@ -1,18 +1,18 @@
-import { Vtf, VCompressionMethods, VDataCollection, VImageData } from 'vtf-js';
-import { registerResourceType, VBaseResource } from 'vtf-js/resources';
+import { Vtf } from 'vtf-js';
+import { registerResourceType } from 'vtf-js/resources';
 
 import { VKeyValuesResource } from './vtf/kv.ts';
 import { VCrcResource } from './vtf/crc.ts';
 import { Viewport } from './viewport.ts';
 
 // TEMP
-import { parse } from 'fast-vdf';
 import { VFakeData } from './utils/fakedata.ts';
 import { getFaceCount } from 'vtf-js/utils';
+import './vtf/bcn.ts';
 import './vtf/zstd.ts';
 
-registerResourceType(VKeyValuesResource);
-registerResourceType(VCrcResource);
+registerResourceType(VKeyValuesResource, VKeyValuesResource.tag);
+registerResourceType(VCrcResource, VCrcResource.tag);
 
 export class App {
 	public vtf: Vtf|undefined = $state();

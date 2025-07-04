@@ -5,11 +5,13 @@
 	import CrcPanel from '$lib/panels/CrcPanel.svelte';
 	import UnknownPanel from '$lib/panels/UnknownPanel.svelte';
 	import KeyValuesPanel from '$lib/panels/KeyValuesPanel.svelte';
+	import HotspotPanel from '$lib/panels/HotspotPanel.svelte';
 
 	import { VCrcResource } from '$lib/js/vtf/crc';
 	import { VKeyValuesResource } from '$lib/js/vtf/kv';
 	import { onMount } from 'svelte';
 	import CompressPanel from '$lib/panels/CompressPanel.svelte';
+    import { VHotspotResource } from 'vtf-js/dist/core/resources.js';
 
 	let header: HTMLElement;
 	let hideHeader = $state(false);
@@ -41,6 +43,8 @@
 			<CrcPanel {chunk} />
 			{:else if chunk instanceof VKeyValuesResource}
 			<KeyValuesPanel {chunk} />
+			{:else if chunk instanceof VHotspotResource}
+			<HotspotPanel {chunk} />
 			{:else}
 			<UnknownPanel {chunk} />
 			{/if}

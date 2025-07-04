@@ -27,6 +27,11 @@ div {
 	src: url('./fonts/SpaceGrotesk-VariableFont_wght.ttf');
 }
 
+@font-face {
+	font-family: 'Roboto';
+	src: url('./fonts/Roboto-VariableFont.ttf');
+}
+
 h1, h2, h3, h4, h5, h6 {
 	margin: 0;
 	font-family: $font-header;

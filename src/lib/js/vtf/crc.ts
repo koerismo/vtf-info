@@ -3,10 +3,10 @@ import { VBaseResource, type VHeader } from 'vtf-js/resources';
 import { hex_le32 } from '../utils/math.ts';
 
 export class VCrcResource extends VBaseResource {
-	static tag = 'CRC';
+	static tag = 0x43_52_43;
 
 	constructor(public readonly crc: number) {
-		super('CRC', 0x2);
+		super(VCrcResource.tag, 0x2);
 	}
 
 	static decode(header: VHeader, view: DataBuffer, info: VFileHeader): VCrcResource {
