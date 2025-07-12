@@ -1,6 +1,12 @@
+<script module>
+	import { VCrcResource } from '$lib/js/vtf/crc.ts';
+	export const TAG = VCrcResource.tag;
+</script>
+
 <script lang='ts'>
 	import Panel from '$lib/components/Panel.svelte';
-	import { type VCrcResource } from '$lib/js/vtf/crc.ts';
+	export const TAG = VCrcResource.prototype.tag;
+
 	const { chunk }: { chunk: VCrcResource } = $props();
 </script>
 

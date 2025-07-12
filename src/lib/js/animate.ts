@@ -1,7 +1,7 @@
-const TIME_PADDING = 0.1;
+// const TIME_PADDING = 0.1;
 
 export function linear(x: number) {
-	return x;
+	return x <= 0 ? 0 : x >= 1 ? 1 : x;
 }
 
 export function quartic_in_out(x: number) {
@@ -39,8 +39,9 @@ export interface AnimTrack {
 export class AnimRunner {
 	tracks: AnimTrack[] = [];
 	running = false;
-	startTime = 0;
-	maxTime = 0;
+	startNow = 0;		// Current-date millis
+	lastFrameTime = 0;	// Timeline seconds
+	maxTime = 0;		// Timeline seconds
 
 	linear(object: any, p: string, start: number, end: number, v1: number, v2: number) {
 		return this.key(object, p, start, end, v1, v2, linear);
@@ -86,12 +87,13 @@ export class AnimRunner {
 
 	_key(t: AnimTrack) {
 		this.tracks.push(t);
-		this.maxTime = Math.max(this.maxTime, t.endTime + TIME_PADDING);
+		this.maxTime = Math.max(this.maxTime, t.endTime);
 		return this;
 	}
 	
 	start() {
-		this.startTime = Date.now();
+		this.startNow = Date.now();
+		this.lastFrameTime = -1;
 		this.running = true;
 	}
 
@@ -102,17 +104,18 @@ export class AnimRunner {
 	/** @returns Returns true if any updates were made, otherwise false. */
 	frame(): boolean {
 		if (!this.running) return false;
-		const time = (Date.now() - this.startTime) / 1000;
+		const time = (Date.now() - this.startNow) / 1000;
 		if (time > this.maxTime) { this.running = false; return false; }
 		let hit = false;
 		for (let i=0; i<this.tracks.length; i++) {
 			const track = this.tracks[i];
-			if (time < track.startTime || time > track.endTime) continue;
+			if (time < track.startTime || this.lastFrameTime > track.endTime) continue;
 			const trackTime = (time - track.startTime) / (track.endTime - track.startTime);
 			const trackValue = track.func(trackTime) * (track.endValue - track.startValue) + track.startValue;
 			track.object[track.property] = trackValue;
 			hit = true;
 		}
+		this.lastFrameTime = time;
 		return hit;
 	}
 }

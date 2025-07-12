@@ -1,8 +1,14 @@
+<script module>
+	import { VHeaderTags } from 'vtf-js/resources';
+	export const TAG = VHeaderTags.TAG_HOTSPOT;
+</script>
+
 <script lang='ts'>
 	import Panel from '$lib/components/Panel.svelte';
 	import BitFlags from '$lib/components/BitFlags.svelte';
-	import type { VHotspotResource } from 'vtf-js/resources';
+	import { type VHotspotResource } from 'vtf-js/resources';
 	const { chunk }: { chunk: VHotspotResource } = $props();
+	console.log(chunk);
 
 	const editorFlagMap: Record<number, string> = {
 		1: '0x1: Unknown',
@@ -17,7 +23,7 @@
 	};
 </script>
 
-<Panel title='vtf &rarr; hotspots'>
+<Panel title='vtf &rarr; hotspots' onexport={() => {}}>
 	<div class='pgrid'>
 		<div class='pgrid-row'>
 			<span>version</span>

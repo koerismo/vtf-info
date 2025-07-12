@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
 	import BtnCollapse from './BtnCollapse.svelte';
+	import BtnExport from '$lib/components/BtnExport.svelte';
 
-	let { children, title }: { children?: Snippet, title: string } = $props();
-	
+	let { children, title, onexport }: { children?: Snippet, title: string, onexport?: () => void } = $props();
+
 	let expanded = $state(true);
 	let header: HTMLElement;
 </script>
@@ -13,7 +14,12 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div bind:this={header} class="header" onclick={ e => {if (e.target === header) expanded = !expanded;} }>
 		<h3>{ title }</h3>
-		<BtnCollapse bind:checked={expanded}></BtnCollapse>
+		<div class="header-buttons">
+			{#if onexport}
+			<BtnExport onclick={onexport}></BtnExport>
+			{/if}
+			<BtnCollapse bind:checked={expanded}></BtnCollapse>
+		</div>
 	</div>
 	
 	<div class="body">
@@ -48,6 +54,11 @@
 			line-height: 1;
 			font-weight: 400;
 		}
+	}
+
+	div.header > div.header-buttons {
+		display: flex;
+		gap: 0.5em;
 	}
 	
 	div.body {

@@ -16,7 +16,7 @@
 <style lang="scss">
 	canvas {
 		position: absolute;
-		z-index: -1;
+		z-index: 0;
 		left: 35vw;
 		right: 5vw;
 		top: 0;

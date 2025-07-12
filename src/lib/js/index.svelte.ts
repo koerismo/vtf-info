@@ -10,6 +10,7 @@ import { VFakeData } from './utils/fakedata.ts';
 import { getFaceCount } from 'vtf-js/utils';
 import './vtf/bcn.ts';
 import './vtf/zstd.ts';
+import { Targa } from './utils/tga.ts';
 
 registerResourceType(VKeyValuesResource, VKeyValuesResource.tag);
 registerResourceType(VCrcResource, VCrcResource.tag);
@@ -57,23 +58,23 @@ export class App {
 	async loadTestImage() {
 		const req = await fetch('/indicator_lights_wall.vtf');
 		const file = new File([await req.blob()], 'indicator_lights_wall.vtf');
-		// const req = await fetch('/pistol_256x.vtf');
-		// const file = new File([await req.blob()], 'pistol_256x.vtf');
 		await this.loadFromFile(file);
-		
-		// const v = this.vtf!;
-		// this.vtf = undefined;
+	}
 
-		// v.compression_method = VCompressionMethods.Deflate;
-		// v.compression_level = 4;
+	async exportFile() {
+		if (!this.vtf) throw Error('whoops');
+		const img = this.vtf.data.getImage(0, 0, 0, 0);
+		if (!(img.data instanceof Uint8Array)) throw Error('Cannot TGAify non-uint8 image!');
+		const tga = new Targa(img.convert(Uint8Array));
+		const data = tga.save();
 
-		// v.meta.push(
-		// 	new VKeyValuesResource(parse('abc def ghi jkl')),
-		// 	new VCrcResource(0x78563412),
-		// 	new VBaseResource('ABC', 0x6),
-		// );
-
-		// this.vtf = v;
+		const a = document.createElement('a');
+		a.download = this.fileName + '.tga';
+		a.href = URL.createObjectURL(new Blob([data], { type: 'image/tga' }));
+		a.click();
+		setTimeout(() => {
+			URL.revokeObjectURL(a.href);
+		}, 5000);
 	}
 }
 
