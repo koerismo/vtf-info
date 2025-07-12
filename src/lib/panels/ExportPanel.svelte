@@ -3,7 +3,7 @@
 </script>
 
 {#if app.vtf}
-<button onclick={() => app.exportFile()}>export &rarr; tga</button>
+<button disabled={app.vtf === undefined || !(app.vtf.data.getImage(0, 0, 0, 0).data instanceof Uint8Array)} onclick={() => app.exportFileTga()}>export &rarr; tga</button>
 {/if}
 
 <style lang="scss">
@@ -19,6 +19,10 @@
 
 		&:hover {
 			background-color: $light-400;
+		}
+
+		&:disabled {
+			background-color: $light-300;
 		}
 	}
 </style>

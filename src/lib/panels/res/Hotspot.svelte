@@ -23,7 +23,7 @@
 	};
 </script>
 
-<Panel title='vtf &rarr; hotspots' onexport={() => {}}>
+<Panel title='vtf &rarr; hotspots'>
 	<div class='pgrid'>
 		<div class='pgrid-row'>
 			<span>version</span>

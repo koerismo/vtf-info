@@ -98,9 +98,12 @@ export class Viewport {
 			this.mousePos.x = ev.offsetX;
 			this.mousePos.y = ev.offsetY;
 
-			if (this.mouseInBounds) {
+			if (this.hotspotObject && this.mouseInBounds) {
 				hover.setHover(undefined);
 				this.mouseInBounds = false;
+				if (this.hotspotObject.setActiveRect(null)) {
+					this.needsRender = true;
+				}
 			}
 		});
 
@@ -115,9 +118,8 @@ export class Viewport {
 				// In rect
 				if (inBounds) {
 					const rid = this.hotspotObject.getRectAtCoords(uv);
-					const needsUpdate = this.hotspotObject.setActiveRect(rid);
 					const rect = this.hotspotObject.getRect(rid);
-					if (needsUpdate) {
+					if (this.hotspotObject.setActiveRect(rid)) {
 						if (rect) {
 							const rectFlagStr = Object.keys(HotSpotRectFlagNames)
 									.filter(x => (+x) & rect.flags)
@@ -132,7 +134,9 @@ export class Viewport {
 				// Exiting rect
 				else if (this.mouseInBounds) {
 					hover.setHover(undefined);
-					this.hotspotObject.setActiveRect(null);
+					if (this.hotspotObject.setActiveRect(null)) {
+						this.needsRender = true;
+					}
 				}
 
 				// Update
@@ -322,7 +326,10 @@ export class Viewport {
 	}
 
 	setSceneHotspots(width: number, height: number, z: number, res?: VHotspotResource) {
-		if (this.hotspotObject) this.scene.remove(this.hotspotObject);
+		if (this.hotspotObject) {
+			this.scene.remove(this.hotspotObject);
+			delete this.hotspotObject;
+		}
 		if (!res) return;
 
 		const hs = this.hotspotObject = new HotspotObject(res.rects, width, height);
@@ -461,7 +468,7 @@ export class Viewport {
 // }
 
 const RECT = new Three.Color(0x888888);
-const RECT_ALT = new Three.Color(0xbb1111);
+const RECT_ALT = new Three.Color(0x992222);
 const RECT_ACTIVE = new Three.Color(0xffffff);
 const RECT_ACTIVE_ALT = new Three.Color(0xff5555);
 

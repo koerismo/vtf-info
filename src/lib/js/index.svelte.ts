@@ -5,7 +5,6 @@ import { VKeyValuesResource } from './vtf/kv.ts';
 import { VCrcResource } from './vtf/crc.ts';
 import { Viewport } from './viewport.ts';
 
-// TEMP
 import { VFakeData } from './utils/fakedata.ts';
 import { getFaceCount } from 'vtf-js/utils';
 import './vtf/bcn.ts';
@@ -61,7 +60,7 @@ export class App {
 		await this.loadFromFile(file);
 	}
 
-	async exportFile() {
+	async exportFileTga() {
 		if (!this.vtf) throw Error('whoops');
 		const img = this.vtf.data.getImage(0, 0, 0, 0);
 		if (!(img.data instanceof Uint8Array)) throw Error('Cannot TGAify non-uint8 image!');
@@ -69,7 +68,7 @@ export class App {
 		const data = tga.save();
 
 		const a = document.createElement('a');
-		a.download = this.fileName + '.tga';
+		a.download = this.fileName!.replace(/\.vtf$/, '.tga');
 		a.href = URL.createObjectURL(new Blob([data], { type: 'image/tga' }));
 		a.click();
 		setTimeout(() => {
