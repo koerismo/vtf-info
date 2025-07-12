@@ -1,4 +1,4 @@
-import { Vtf } from 'vtf-js';
+import { VFormats, Vtf } from 'vtf-js';
 import { registerResourceType } from 'vtf-js/resources';
 
 import { VKeyValuesResource } from './vtf/kv.ts';
@@ -13,6 +13,13 @@ import { Targa } from './utils/tga.ts';
 
 registerResourceType(VKeyValuesResource, VKeyValuesResource.tag);
 registerResourceType(VCrcResource, VCrcResource.tag);
+
+export const enum ExportableReturn {
+	Ok = 0,
+	ErrIncompatibleFormat,
+	ErrCannotDecode,
+	ErrUnknown,
+}
 
 export class App {
 	public vtf: Vtf|undefined = $state();
@@ -60,6 +67,14 @@ export class App {
 		await this.loadFromFile(file);
 	}
 
+	canExportFileTga(): ExportableReturn {
+		if (!this.vtf)
+			return ExportableReturn.ErrUnknown;
+		if (this.vtf.format === VFormats.BC6H || this.vtf.format === VFormats.BC7)
+			return ExportableReturn.ErrCannotDecode;
+		return ExportableReturn.Ok;
+	}
+
 	async exportFileTga() {
 		if (!this.vtf) throw Error('whoops');
 		const img = this.vtf.data.getImage(0, 0, 0, 0);
@@ -73,7 +88,8 @@ export class App {
 		a.click();
 		setTimeout(() => {
 			URL.revokeObjectURL(a.href);
-		}, 5000);
+			a.remove();
+		}, 30_000);
 	}
 }
 

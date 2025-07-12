@@ -29,7 +29,7 @@ export class Viewport {
 	animator: AnimRunner = new AnimRunner();
 	needsRender: boolean = true;
 
-	slicePlanes: Three.Mesh<Three.PlaneGeometry, Three.Material>[] = [];
+	slicePlanes: Three.Mesh<Three.PlaneGeometry, Three.MeshBasicMaterial>[] = [];
 	hotspotObject: HotspotObject | undefined;
 
 	element: HTMLCanvasElement;
@@ -187,7 +187,7 @@ export class Viewport {
 		this.needsRender = true;
 	}
 
-	makeSlicePlane(z: number, aspect: number, mat: Three.Material) {
+	makeSlicePlane(z: number, aspect: number, mat: Three.MeshBasicMaterial) {
 		const geo = new Three.PlaneGeometry(1, -1/aspect);
 		const obj = new Three.Mesh(geo, mat);
 		obj.position.z = z;
@@ -195,7 +195,7 @@ export class Viewport {
 		return obj;
 	}
 
-	makeSliceMaterial(img: VEncodedImageData | VImageData, flags: VFlags, fallbackTint: number): Three.Material {
+	makeSliceMaterial(img: VEncodedImageData | VImageData, flags: VFlags, fallbackTint: number): Three.MeshBasicMaterial {
 		const tex = this.convertTexture(img, flags);
 		if (!tex) return new Three.MeshBasicMaterial({ color: new Three.Color(fallbackTint, fallbackTint, fallbackTint), transparent: true, opacity: 0.0, side: Three.BackSide });
 		return new Three.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.0, side: Three.BackSide });
@@ -297,12 +297,17 @@ export class Viewport {
 		return;
 	}
 
+	getTextureData() {
+		const tex = this.slicePlanes[0].material;
+		tex.map;
+	}
+
 	setSceneSlices(slices: (VEncodedImageData | VImageData)[], aspect: number, flags: VFlags) {
 		if (this.slicePlanes.length) {
 			// Remove all old shit
 			this.scene.remove(...this.slicePlanes);
 			for (const plane of this.slicePlanes) {
-				const mat = <Three.MeshBasicMaterial>plane.material;
+				const mat = plane.material;
 				if (mat.isMeshBasicMaterial) mat.map?.dispose();
 				mat.dispose();
 				plane.geometry.dispose();
