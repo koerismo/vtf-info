@@ -1,6 +1,10 @@
+<script module>
+	import { VKeyValuesResource } from '$lib/js/vtf/kv.ts';
+	export const TAG = VKeyValuesResource.tag;
+</script>
+
 <script lang='ts'>
 	import Panel from '$lib/components/Panel.svelte';
-	import { type VKeyValuesResource } from '$lib/js/vtf/kv.ts';
 	const { chunk }: { chunk: VKeyValuesResource } = $props();
 </script>
 

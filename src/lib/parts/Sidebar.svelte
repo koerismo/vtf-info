@@ -1,17 +1,22 @@
 <script lang="ts">
 	import { app } from '$lib/js/index.svelte.ts';
+	import { onMount, type Component } from 'svelte';
 
+	// Hardcoded panels
 	import HeaderPanel from '$lib/panels/HeaderPanel.svelte';
-	import CrcPanel from '$lib/panels/CrcPanel.svelte';
+	import ExportPanel from '$lib/panels/ExportPanel.svelte';
+	import CompressionPanel from '$lib/panels/CompressionPanel.svelte';
 	import UnknownPanel from '$lib/panels/UnknownPanel.svelte';
-	import KeyValuesPanel from '$lib/panels/KeyValuesPanel.svelte';
-	import HotspotPanel from '$lib/panels/HotspotPanel.svelte';
 
-	import { VCrcResource } from '$lib/js/vtf/crc';
-	import { VKeyValuesResource } from '$lib/js/vtf/kv';
-	import { onMount } from 'svelte';
-	import CompressPanel from '$lib/panels/CompressPanel.svelte';
-    import { VHotspotResource } from 'vtf-js/dist/core/resources.js';
+	//
+	import type { VResource } from 'vtf-js/resources';
+
+	const resPanels = import.meta.glob('$lib/panels/res/*.svelte', { eager: true });
+	const resPanelMap: Record<number, Component<{ chunk: VResource }>> = {};
+	for (const key in resPanels) {
+		const panel = resPanels[key] as { TAG: number, default: Component };
+		resPanelMap[panel.TAG] = panel.default;
+	}
 
 	let header: HTMLElement;
 	let hideHeader = $state(false);
@@ -36,19 +41,17 @@
 	<div id="sidebar-panels">
 		<HeaderPanel vtf={app.vtf} fileSize={app.fileSize!}></HeaderPanel>
 		{#if app.vtf.compression_level}
-		<CompressPanel vtf={app.vtf}></CompressPanel>
+		<CompressionPanel vtf={app.vtf}></CompressionPanel>
 		{/if}
 		{#each app.vtf.meta as chunk}
-			{#if chunk instanceof VCrcResource}
-			<CrcPanel {chunk} />
-			{:else if chunk instanceof VKeyValuesResource}
-			<KeyValuesPanel {chunk} />
-			{:else if chunk instanceof VHotspotResource}
-			<HotspotPanel {chunk} />
+			{#if chunk.tag in resPanelMap}
+				{@const ResourcePanel = resPanelMap[chunk.tag]}
+				<ResourcePanel chunk={chunk}></ResourcePanel>
 			{:else}
-			<UnknownPanel {chunk} />
+				<UnknownPanel chunk={chunk}></UnknownPanel>
 			{/if}
 		{/each}
+		<ExportPanel></ExportPanel>
 	</div>
 	{:else}
 	<h1>Drop</h1>
@@ -71,7 +74,7 @@
 		// padding: 4em 2.0em 0 2.5em;
 
 		margin: 2.5rem 0 2.5rem 1.0rem;
-		padding: 4rem 1rem 0 1rem;
+		padding: 4rem 1.5rem 0 1rem;
 		gap: 1.4rem;
 
 		width: max(min(400px, 40vw), 220px);
@@ -84,7 +87,7 @@
 		div#sidebar-panels {
 			direction: ltr;
 			background-color: $dark-500;
-			box-shadow: 0 0 20px 10px $dark-500;
+			box-shadow: 0 0 1.0em 0.5em #151515;
 
 			display: flex;
 			flex-direction: column;
@@ -102,6 +105,7 @@
 
 	h1 {
 		position: absolute;
+		z-index: 1;
 		top: 1.2em;
 		left: 1.2em;
 		transition: opacity 0.15s linear;

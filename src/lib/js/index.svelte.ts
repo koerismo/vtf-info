@@ -1,18 +1,25 @@
-import { Vtf } from 'vtf-js';
+import { VFormats, Vtf } from 'vtf-js';
 import { registerResourceType } from 'vtf-js/resources';
 
 import { VKeyValuesResource } from './vtf/kv.ts';
 import { VCrcResource } from './vtf/crc.ts';
 import { Viewport } from './viewport.ts';
 
-// TEMP
 import { VFakeData } from './utils/fakedata.ts';
 import { getFaceCount } from 'vtf-js/utils';
 import './vtf/bcn.ts';
 import './vtf/zstd.ts';
+import { Targa } from './utils/tga.ts';
 
 registerResourceType(VKeyValuesResource, VKeyValuesResource.tag);
 registerResourceType(VCrcResource, VCrcResource.tag);
+
+export const enum ExportableReturn {
+	Ok = 0,
+	ErrIncompatibleFormat,
+	ErrCannotDecode,
+	ErrUnknown,
+}
 
 export class App {
 	public vtf: Vtf|undefined = $state();
@@ -57,23 +64,32 @@ export class App {
 	async loadTestImage() {
 		const req = await fetch('/indicator_lights_wall.vtf');
 		const file = new File([await req.blob()], 'indicator_lights_wall.vtf');
-		// const req = await fetch('/pistol_256x.vtf');
-		// const file = new File([await req.blob()], 'pistol_256x.vtf');
 		await this.loadFromFile(file);
-		
-		// const v = this.vtf!;
-		// this.vtf = undefined;
+	}
 
-		// v.compression_method = VCompressionMethods.Deflate;
-		// v.compression_level = 4;
+	canExportFileTga(): ExportableReturn {
+		if (!this.vtf)
+			return ExportableReturn.ErrUnknown;
+		if (this.vtf.format === VFormats.BC6H || this.vtf.format === VFormats.BC7)
+			return ExportableReturn.ErrCannotDecode;
+		return ExportableReturn.Ok;
+	}
 
-		// v.meta.push(
-		// 	new VKeyValuesResource(parse('abc def ghi jkl')),
-		// 	new VCrcResource(0x78563412),
-		// 	new VBaseResource('ABC', 0x6),
-		// );
+	async exportFileTga() {
+		if (!this.vtf) throw Error('whoops');
+		const img = this.vtf.data.getImage(0, 0, 0, 0);
+		if (!(img.data instanceof Uint8Array)) throw Error('Cannot TGAify non-uint8 image!');
+		const tga = new Targa(img.convert(Uint8Array));
+		const data = tga.save();
 
-		// this.vtf = v;
+		const a = document.createElement('a');
+		a.download = this.fileName!.replace(/\.vtf$/, '.tga');
+		a.href = URL.createObjectURL(new Blob([data], { type: 'image/tga' }));
+		a.click();
+		setTimeout(() => {
+			URL.revokeObjectURL(a.href);
+			a.remove();
+		}, 30_000);
 	}
 }
 

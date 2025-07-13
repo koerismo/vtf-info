@@ -32,9 +32,9 @@ export function hex_le32(x: number) {
 }
 
 export function hex_tag(x: number) {
-	return [hex(x >> 0), hex(x >> 8), hex(x >> 16)].join(' ');
+	return [hex(x >> 16), hex(x >> 8), hex(x >> 0)].join(' ');
 }
 
 export function str_tag(x: number) {
-	return String.fromCharCode((x >> 0) & 0xff, (x >> 8) & 0xff, (x >> 16) & 0xff);
+	return String.fromCharCode((x >> 16) & 0xff, (x >> 8) & 0xff, (x >> 0) & 0xff);
 }

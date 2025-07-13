@@ -1,6 +1,7 @@
 <script lang='ts'>
 	import Panel from '$lib/components/Panel.svelte';
 	import { type Vtf, VCompressionMethods } from 'vtf-js';
+
 	const { vtf }: { vtf: Vtf } = $props();
 </script>
 
@@ -8,7 +9,7 @@
 	<div class="pgrid">
 		<div class="pgrid-row">
 			<span>method</span>
-			<span>{ VCompressionMethods[vtf.compression_method] ?? 'none' }</span>
+			<span>{ VCompressionMethods[vtf.compression_method] ?? 'unknown' }</span>
 		</div>
 		<div class="pgrid-row">
 			<span>level</span>
